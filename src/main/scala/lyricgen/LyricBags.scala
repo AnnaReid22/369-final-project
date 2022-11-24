@@ -2,11 +2,14 @@ package lyricgen
 
 import scala.List
 import scala.io._
+import scala.util.Random
 
 object LyricBags {
 
   def main (args : Array[String]) = {
-    println(readLyrics("src/main/scala/lyricgen/antihero.txt").mkString("\n"))
+//    println(readLyrics("src/main/scala/lyricgen/antihero.txt").mkString("\n"))
+    val l = List(1, 2, 3, 4, 5)
+    println(randomChoice(l))
   }
 
   // Function reads in a text file with song lyrics, and cleans the lyrics from empty lines,
@@ -38,6 +41,13 @@ object LyricBags {
   def bagOf2(lyrics : List[String])  = {
     // Making the bags
 
+  }
+
+  // Function returns a random element in a List
+  // I/O: List[Any] => Any
+  def randomChoice(list: List[Any]): Any = {
+    val random = new Random()
+    list(random.nextInt(list.length))
   }
 
 }
