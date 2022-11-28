@@ -1,46 +1,65 @@
 package lyricgen
 
-import scala.List
 import scala.io._
 import scala.util.Random
 
 object LyricBags {
 
   def main (args : Array[String]) = {
-//    println(readLyrics("src/main/scala/lyricgen/antihero.txt").mkString("\n"))
-    val l = List(1, 2, 3, 4, 5)
-    println(randomChoice(l))
+
+    // TODO: get all bags from all lyrics files. Example:
+    val exampleBag = bagOf(readLyrics("src/main/scala/lyricgen/example.txt"), 2)
+
+    println(exampleBag.mkString("\n"))
+
+    // TODO: aggregate all maps of bags together to get the final bag
+
+    // TODO: Generate the lyrics from this final bag
   }
 
   // Function reads in a text file with song lyrics, and cleans the lyrics from empty lines,
   // and ghost lyrics [those parts between ()] for when we are making the bag of words.
   // I/O: String => Array[String]
-  def readLyrics(path : String) : Array[String] = {
-    val lyrics = Source.fromFile(path)
+  def readLyrics(path : String) : List[String] = {
+    val l = Source.fromFile(path)
       .getLines
       .toArray
       .filter { // Remove all empty lines and those lines that say [Verse 1], [Chorus], etc...
         l => !(l.contains("[") | l.isEmpty)}
       .map(_.toLowerCase()) // TODO: decide if we get better lyrics with case preserved or not
       .map(_ + " <N>") // Adding <N> to every line
+      .flatMap(l => l.split(" "))
+      .map(word => word
+        .replace("(", "")
+        .replace(")", "")
+        .replace(",", ""))
+      .toList
 
-    // Adding START to the first line
-    lyrics(0) = "<START> " + lyrics(0)
+    // Adding START
+    var lyrics = "<START>" :: l
 
     // Adding END to the last line
-    val lastIndex = lyrics.length - 1
-    val lastLength = lyrics(lastIndex).length // Used to remove the <N> to the last line
-    lyrics(lastIndex) = lyrics.last.substring(0, lastLength - 4) + " <END>"
+    var lyrics_ = lyrics.toArray
+    val lengthLyrics = lyrics.length - 1
+    lyrics_(lengthLyrics) = "<END>"
 
-    lyrics
+    lyrics_.toList
   }
 
-  // Function creates a map representing a bag of words of N = 2
+  // Function creates a map representing a bag of N words
   // This includes the <START>, <N>, <END> states
-  // I/O: Array[String] => (String, List(String))
-  def bagOf2(lyrics : List[String])  = {
+  // I/O: List[String] => Map[List[String], List[String]]
+  def bagOf(lyrics : List[String], N : Int) : Map[List[String], List[String]]  = {
     // Making the bags
+    val orders = (0 until lyrics.length - N).toList
+      .map(l => ((l until l + N).toList -> (l + N)))
+      .map{
+        case (k, v) => k.map(x => lyrics(x)) -> lyrics(v)
+      }
+      .groupBy{ case (k, v) => k}
+      .mapValues(l => l.map(t => t._2))
 
+    orders
   }
 
   // Function returns a random element in a List
