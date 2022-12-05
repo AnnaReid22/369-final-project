@@ -1,5 +1,6 @@
 package lyricgen
 
+import lyricgen.LyricBags.{bagOf, readLyrics}
 import org.json4s.scalap.scalasig.NoSymbol.path
 import shapeless.HList.ListCompat.::
 
@@ -9,18 +10,18 @@ import spire.macros.Auto.scala
 
 import _root_.scala.collection.mutable
 
-object LyricBags {
+object LyricBagsJen {
 
   def main(args: Array[String]) = {
 
-    System.setProperty("hadoop.home.dir", "c:/winutils/")
+//    System.setProperty("hadoop.home.dir", "c:/winutils/")
     // TODO: get all bags from all lyrics files. Example:
     val exampleLyric = "hello these are awesome\nlyrics, and you will\nend up loving, this,\nsong\n\nand you can't sing them\n\nboom boom boom\nscooby doo pa pa"
     val exampleBag = bagOf(readLyrics(exampleLyric, 2), 2)
 
-    println(exampleBag.mkString("\n"))
+//    println(exampleBag.mkString("\n"))
 
-    val songsContent = readFilesContent("src/main/scala/brunomarslyrics.txt")
+    val songsContent = readFilesContent("src/main/scala/lyricgen/brunomarslyrics.txt")
     //    songsContent.foreach(println(_))
 
     //    //have a global bag map
@@ -31,7 +32,13 @@ object LyricBags {
     //    //concatenate to global bag
 
 
+
     // TODO: aggregate all maps of bags together to get the final bag
+    val a = Map((1 -> 2), (3 -> 4))
+    val b = Map((1 -> 3), (3 -> 4), (3 -> 7), (5 -> 6))
+
+    a.toList.++(b.toList).groupBy{ case (k, v) => k }.mapValues(l => l.map{case (k, v) => v}.distinct).foreach(println(_))
+//    a.toList.++(b.toList)
 
     // TODO: Generate the lyrics from this final bag
   }
@@ -92,7 +99,7 @@ object LyricBags {
         case (k, v) => k.map(x => lyrics(x)) -> lyrics(v)
       }
       .groupBy { case (k, v) => k }
-      .mapValues(l => l.map(t => t._2))
+      .mapValues(l => l.map(t => t._2).distinct)
 
     orders
   }
