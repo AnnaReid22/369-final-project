@@ -1,44 +1,45 @@
 package lyricgen
 
-import lyricgen.LyricBags.{bagOf, readLyrics}
-import org.json4s.scalap.scalasig.NoSymbol.path
-import shapeless.HList.ListCompat.::
+import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
+import spire.math.Polynomial.x
 
 import scala.io._
 import scala.util.Random
-import spire.macros.Auto.scala
-
 import _root_.scala.collection.mutable
+
+
 
 object LyricBagsJen {
 
   def main(args: Array[String]) = {
 
-//    System.setProperty("hadoop.home.dir", "c:/winutils/")
+    Logger.getLogger("org").setLevel(Level.OFF)
+    Logger.getLogger("akka").setLevel(Level.OFF)
+
+    val conf = new SparkConf().setAppName("A6").setMaster("local[4]")
+    val sc = new SparkContext(conf)
+
+    System.setProperty("hadoop.home.dir", "c:/winutils/")
     // TODO: get all bags from all lyrics files. Example:
     val exampleLyric = "hello these are awesome\nlyrics, and you will\nend up loving, this,\nsong\n\nand you can't sing them\n\nboom boom boom\nscooby doo pa pa"
     val exampleBag = bagOf(readLyrics(exampleLyric, 2), 2)
 
-//    println(exampleBag.mkString("\n"))
+    //    println(exampleBag.mkString("\n"))
 
-    val songsContent = readFilesContent("src/main/scala/lyricgen/brunomarslyrics.txt")
-    //    songsContent.foreach(println(_))
+    val songsContent = readFilesContent("src/main/scala/brunomarslyrics.txt")
 
-    //    //have a global bag map
-    //    val globalBag = mutable.Map[List[String], List[String]]()
+    //have a global bag map of all the bags generates from each song
+    val globalBag = Map[List[String], List[String]]();
+    var rddGlobalBag = sc.parallelize(globalBag.toList)
     songsContent.foreach({case(x, y) =>
       val curBag = bagOf(readLyrics(y, 2), 2)
-      println(curBag)})
-    //    //concatenate to global bag
+      val rddCurBag = sc.parallelize((curBag.toList))
+      rddGlobalBag = rddCurBag.union(rddGlobalBag)
+    })
 
-
-
-    // TODO: aggregate all maps of bags together to get the final bag
-    val a = Map((1 -> 2), (3 -> 4))
-    val b = Map((1 -> 3), (3 -> 4), (3 -> 7), (5 -> 6))
-
-    a.toList.++(b.toList).groupBy{ case (k, v) => k }.mapValues(l => l.map{case (k, v) => v}.distinct).foreach(println(_))
-//    a.toList.++(b.toList)
+    rddGlobalBag.groupByKey().map({case (k, v) => (k, v.toList.flatMap(x => x).distinct)}).foreach(println(_))
 
     // TODO: Generate the lyrics from this final bag
   }
@@ -111,6 +112,7 @@ object LyricBagsJen {
     list(random.nextInt(list.length))
   }
 
+  //Function concatenates the whole lyrics into one string and puts it in a map
   def readFilesContent(fileName: String): mutable.Map[Int, String] = {
     val songsMap = mutable.Map[Int, String]();
     val l = Source.fromFile(fileName)
@@ -119,7 +121,7 @@ object LyricBagsJen {
     var lyricString = ""
     var count = 1
     for (i <- 0 to l.size - 1) {
-      if(l(i).trim() != "")
+      if(l(i).trim() != "") //if its not an empty line then we are not at the end of the song
         lyricString = lyricString + l(i).trim() + '\n'
       else {
         songsMap += (count -> lyricString)
@@ -129,4 +131,5 @@ object LyricBagsJen {
     }
     songsMap
   }
+
 }
