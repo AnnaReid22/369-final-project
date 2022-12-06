@@ -20,7 +20,7 @@ object LyricBags {
 
     println(exampleBag.mkString("\n"))
 
-    val songsContent = readFilesContent("src/main/scala/brunomarslyrics.txt")
+    val songsContent = readFilesContent("src/main/scala/lyricgen/brunomarslyrics.txt")
     //    songsContent.foreach(println(_))
 
     //    //have a global bag map
