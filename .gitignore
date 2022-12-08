@@ -1,4 +1,5 @@
 /project
 .idea
 /target
+/src/main/final.csv
 .bsp
