@@ -13,7 +13,7 @@ import scala.io._
 // sum all of the weights for each song
 // the resulting number is the relative influence for each song
 
-object kneighbors {
+object region_weight {
 
   def main(args: Array[String]): Unit = {
   Logger.getLogger("org").setLevel(Level.OFF)
